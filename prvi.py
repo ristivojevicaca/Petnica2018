@@ -1,39 +1,70 @@
 import math
 import numpy as np
 from numpy import array as u_niz
+from numpy.polynomial.chebyshev import chebfit, chebval
+import scipy
 import matplotlib.pyplot as plt
 
+G = 1.32712440018e20
+info = [(0.38709927,   0.00000037, 0.20563593,  0.00001906, 252.25032350, 149472.67411175,  77.45779628),
+        (0.72333566,   0.00000390, 0.00677672, -0.00004107, 181.97909950,  58517.81538729, 131.60246718),
+        (1.00000261,   0.00000562, 0.01671123, -0.00004392, 100.46457166,  35999.37244981, 102.93768193),
+        (1.52371034,   0.00001847, 0.09339410,  0.00007882,  -4.55343205,  19140.30268499, -23.94362959),
+        (5.20288700,  -0.00011607, 0.04838624, -0.00013253,  34.39644051,   3034.74612775,  14.72847983),
+        (9.53667594,  -0.00125060, 0.05386179, -0.00050991,  49.95424423,   1222.49362201,  92.59887831),
+        (19.18916464, -0.00196176, 0.04725744, -0.00004397, 313.23810451,    428.48202785, 170.95427630),
+        (30.06992276,  0.00026291, 0.00859048,  0.00005105, -55.12002969,    218.45945325,  44.96476227),
+        (39.48211675, -0.00031596, 0.24882730,  0.00005170, 238.92903833,    145.20780515, 224.06891629)]
 
-def simulacija(x, y, vx, vy, gm, n, step):  # simulira kretanje tela samo pocetnom brzinom u gravitacionom polju sunca
+
+def chebyshevval(coef, n):
+    return chebval(np.linspace(-1, 1, n), coef)
+
+
+def polozaj_planeta(index, t, e_prev):  # kao sadasnjost se racuna godina 2000.
+    (a0, a1, e0, e1, l0, l1, omegabar0) = info[index]
+    # omegabar1 = 0.44441088
+    t_ = t/36525
+    a = a0 + a1*t_
+    e = e0 + e1*t_
+    # print(t_,e)
+    l_ = l0 + l1*t_
+    e_ = 180/math.pi * e
+    m = ((l_ - omegabar0) % 360)-180
+    e_ = scipy.optimize.newton(lambda _: _ - e_*math.sin(np.deg2rad(_)) - m, e_prev, maxiter=40, tol=1e-3)
+    x = a * (math.cos(np.deg2rad(e_)) - e)
+    y = a * math.sqrt(1-e**2) * math.sin(np.deg2rad(e_))
+    eprev = e_
+    return [x, y, eprev]
+
+
+def simulacija(x, y, vx, vy, gm, n):  # simulira kretanje tela samo pocetnom brzinom u gravitacionom polju sunca
     _x = np.empty(n)
     _y = np.empty(n)
     _t = np.empty(n)
-    data = (x, y, vx, vy)
+    data = [[x, y], [vx, vy]]
+    r = math.sqrt(x*x+y*y)
+    v = math.sqrt(vx*vx+vy*vy)
+    time = 0.0
+    limit = 0.001675
+    eprev = 0
     for i in range(n):
+        a = gm/(r ** 2)
+        # print(atemp)
+        if a == 0:
+            step = 3600*12
+        else:
+            step = math.ceil((v/a)*limit)
+        print(step)
+        eprev = polozaj_planeta(0, (time+step)/86400, eprev)[2]
         data = runge_kuta4(data, gm, step)
-        _x[i] = data[0]
-        _y[i] = data[1]
-        _t[i] = i * step
-        # Teta[i] = ugao_teta(x_sim,y_sim);
-    # plt.plot (u_niz(T)/(3600*24),u_niz(X)/1e9,label='x');
-    # plt.plot(u_niz(T)/(3600*24),u_niz(Y)/1e9,label='y');
-    # pokusaj da se ugao pod kojim se nalazi brod aproksimira polinomom - NE RADI
-    stepen = 5
-    koef_x = np.polyfit(_t, _x, stepen)
-    koef_y = np.polyfit(_t, _y, stepen)
-    # f = splrep(T[0:n-1:128],Teta[0:n-1:128],k=3);
-    polinom_x = np.poly1d(koef_x)
-    polinom_y = np.poly1d(koef_y)
-    vrednosti_x = list(map(polinom_x, _t))
-    vrednosti_y = list(map(polinom_y, _t))
-    plt.figure()
-    plt.plot(u_niz(_t), u_niz(_x), 'r')
-    plt.plot(_t, vrednosti_x, 'r--')
-    plt.plot(u_niz(_t), u_niz(_y), 'b')
-    plt.plot(_t, vrednosti_y, 'b--')
-    plt.figure()
-    plt.plot(_x, _y)
-    plt.axis('equal')
+        _x[i] = data[0][0]
+        _y[i] = data[0][1]
+        _t[i] = time+step
+        time = _t[i]
+        r = math.sqrt(_x[i]*_x[i]+_y[i]*_y[i])
+        v = math.sqrt(data[1][0]*data[1][0]+data[1][1]*data[1][1])
+    print(time/(3600*24))
 
     # vrednosti = splev(T,f)
     # plt.figure();

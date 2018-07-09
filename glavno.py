@@ -1,15 +1,14 @@
 import math
+from math import pi
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy
-import scipy.optimize
+from numpy.polynomial.chebyshev import chebfit, chebval
 # import genetski_algoritam
-# import prvi
+import prvi
 # import drugi
-# import bitstring
-# from bitstring import BitArray
-# import struct
-# from scipy.interpolate import splrep, splev
+
+
+# Ova funkcija prevodi niz dekadnih brojeva u njihov binarni zapis
 
 # def binary(num):
 #    # Struct can provide us with the float packed into bytes. The '!' ensures that
@@ -20,7 +19,7 @@ import scipy.optimize
 #
 #    # For each character in the returned string, we'll turn it into its corresponding
 #    # integer code point
-#    # 
+#    #
 #    # [62, 163, 215, 10] = [ord(c) for c in '>\xa3\xd7\n']
 #    integers = [ord(c) for c in packed]
 #    #print 'Integers: %s' % integers
@@ -43,9 +42,6 @@ import scipy.optimize
 #    # in an array as binary strings. Now we just concatenate them to get the total
 #    # representation of the float:
 #    return ''.join(padded)
-
-
-# Ova funkcija prevodi niz dekadnih brojeva u njihov binarni zapis
 
 
 def to_binary(niz_num):
@@ -84,7 +80,7 @@ def to_uint16(nizbin):  # ova funkcija prevodi niz 1 i 0 u nizniz dekadnih broje
 
 # podaci potrebni za racunanje pozicije planete po formulama. imas formule u jednom pdf - u na drajvu.
 # redosled podataka je:
-# masa - u jedinicama     
+# masa - u jedinicama
 # a - velika poluosa i njena promena po veku
 # e - ekscentricitet i promena po veku
 # L - srednja longituda i promena po veku
@@ -137,42 +133,64 @@ def fitness(min_d_mars):  # ideja za jednostavnu fitnes funkciju - to je minimal
 
 
 def crtanje_planeta():
-    broj_tacaka = 900
-    t = np.linspace(0, 6000, broj_tacaka)
-    x = [[], [], [], [], []]
-    y = [[], [], [], [], []]
-    e_prev = [0.0,  0.0, 0.0,  0.0, 0.0]
-    indeksi_planeta = [0, 1, 2, 3, 4]  # indeksi planeta koje crtamo
+    broj_tacaka = 365 * 5
+    broj_planeta = 4
+    t = np.linspace(0, 365 * 5, broj_tacaka)
+    x = [[] for _ in range(broj_planeta)]
+    y = [[] for _ in range(broj_planeta)]
+    e_prev = [2.0 for _ in range(broj_planeta)]
+    indeksi_planeta = [0, 1, 2, 3]  # indeksi planeta koje crtamo
     for i in range(broj_tacaka):
-        for j in range(5):  # koliko planeta crtamo
-            rez = polozaj_planeta(indeksi_planeta[j], t[i], e_prev[j])
+        for j in range(broj_planeta):  # koliko planeta crtamo
+            rez = prvi.polozaj_planeta(indeksi_planeta[j], t[i], e_prev[j])
             x[j].append(rez[0])
             y[j].append(rez[1])
             e_prev[j] = rez[2]
-    
-    putanje = plt.plot(x[0], y[0], 'r.', x[1], y[1], 'y--', x[2], y[2], 'b-.', x[3], y[3], 'c:', x[4], y[4], 'm')
-    plt.setp(putanje, markersize=2.5)
+
+    plt.plot(x[0], y[0], 'g', linewidth=0.8)
+    plt.plot(x[1], y[1], 'y', linewidth=0.8)
+    plt.plot(x[2], y[2], 'b', linewidth=0.8)
+    plt.plot(x[3], y[3], 'r', linewidth=0.8)
+
+    # plt.setp(putanje,markersize=2.5)
     plt.plot(0.0, 0.0, 'k*', markersize=7)
     plt.axis('scaled')
-    plt.title('Putanje Merkura, Venere, Zemlje i Marsa oko Sunca')  # dodao sam i Jupiter
-    plt.show()
+    plt.title('Putanje Merkura, Venere, Zemlje i Marsa oko Sunca')
+    plt.xlabel('x koord [astronomska jedinica]')
+    plt.ylabel('y koord [astronomska jedinica]')
+    # plt.show()
 
 
-crtanje_planeta()
+def x_osa(a):
+    return np.arange(a)
 
 
-def polozaj_planeta(index, t, e_prev):  # kao sadasnjost se racuna godina 2000.
-    (a0, a1, e0, e1, l0, l1, omegabar0) = info[index]
-    # omegabar1 = 0.44441088
-    t_ = t/36525
-    a = a0 + a1*t_
-    e = e0 + e1*t_
-    # print(t_,e)
-    l_ = l0 + l1*t_
-    e_ = 180/math.pi * e
-    m = ((l_ - omegabar0) % 360)-180
-    e_ = scipy.optimize.newton(lambda _: _ - e_*math.sin(np.deg2rad(_)) - m, e_prev, maxiter=40, tol=1e-3)
-    x = a * (math.cos(np.deg2rad(e_)) - e)
-    y = a * math.sqrt(1-e**2) * math.sin(np.deg2rad(e_))
-    eprev = e_
-    return [x, y, eprev]
+def inicijalizacija(n, br_segm, chebdeg):
+    uglovi_matrica = np.multiply(np.random.random_sample((n, br_segm)), 2 * pi)
+    print(uglovi_matrica)
+    koeficijenti = np.array([chebfit(x_osa(br_segm), uglovi, chebdeg) for uglovi in uglovi_matrica])
+    temp = np.array([chebval(x_osa(br_segm), cheb) for cheb in koeficijenti])
+    print(np.divide(temp, uglovi_matrica))
+    snaga = np.random.random_integers(0, 1, (n, br_segm))
+    return koeficijenti, snaga
+
+
+def otpakivanje(koeficijenti, snaga):
+    koef_bitovi = np.unpackbits(koeficijenti.view(np.uint8), axis=1)
+    matrica = np.concatenate((koef_bitovi, snaga), axis=1)
+    return matrica
+
+
+def pakovanje(matrica, chebdeg):
+    koef_bitovi = matrica[:, :(chebdeg + 1) * 64]
+    snaga = matrica[:, (chebdeg + 1) * 64:]
+    koeficijenti = np.packbits(koef_bitovi, axis=1).view(np.float_)
+    return koeficijenti, snaga
+
+# def kodiranje(koeficijenti, snaga, n, br_segm):
+
+
+coef, uklj = inicijalizacija(5, 10, 8)
+matr = otpakivanje(coef, uklj)
+coef, uklj = pakovanje(matr, 8)
+print(np.array([chebval(x_osa(10), cheb) for cheb in coef]))
