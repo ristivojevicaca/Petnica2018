@@ -147,17 +147,15 @@ def pakovanje(matrica, chebdeg):
 r0_ = np.array((150e9, 0))
 v0_ = np.array((0, 29780))
 # uglovi = np.zeros(1000)
-uglovi = np.ones(1000) * pi
+uglovi = np.ones(2000) * pi
 
 # start = time.process_time()
-_r, _v = simulacija_pogon.simulacija(r0_, v0_, (4e2, 20), uglovi, 1000)
+_r, _v, _step = simulacija_pogon.simulacija(r0_, v0_, (4e2, 0), uglovi, 2000)
 # _b = simulacija_pogon.simulacija(r0_, v0_, (4e2, 20), np.zeros(1000), 1000)
 # _c = prvi.simulacija(150e9, 0, 0, 29780, podaci.grav_par[0], 1000)
 # print(time.process_time() - start)
-# plt.plot(_a[:, 0], _a[:, 1])
+plt.plot(_r[:, 0], _r[:, 1])
 # plt.plot(_b[:, 0], _b[:, 1])
 # plt.plot(_c[0], _c[1])
-# for _ in range(1000):
-#    print(_r[_], _v[_], simulacija_pogon.modulo(_r[_]) / podaci.au)
 plt.axis('equal')
-# plt.show()
+plt.show()
