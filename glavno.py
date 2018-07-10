@@ -148,9 +148,10 @@ def pakovanje(matrica, chebdeg):
 
 # uglovi = np.zeros(1000)
 uglovi = np.ones(n) * pi
+y_max = 1
 
 start = time.process_time()
-_r, _v, _step = simulacija_pogon.simulacija(r0_, v0_, (4e2, 0), uglovi, n)
+_r, _v, _step = simulacija_pogon.simulacija(r0_, v0_, (4e2, 0), uglovi, y_max)
 # _b = simulacija_pogon.simulacija(r0_, v0_, (4e2, 20), np.zeros(1000), 1000)
 # _c = prvi.simulacija(150e9, 0, 0, 29780, podaci.grav_par[0], 1000)
 print(time.process_time() - start)
