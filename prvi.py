@@ -1,20 +1,9 @@
 import math
 import numpy as np
+import podaci
 from numpy import array as u_niz
-from numpy.polynomial.chebyshev import chebfit, chebval
-import scipy
-import matplotlib.pyplot as plt
-
-G = 1.32712440018e20
-info = [(0.38709927,   0.00000037, 0.20563593,  0.00001906, 252.25032350, 149472.67411175,  77.45779628),
-        (0.72333566,   0.00000390, 0.00677672, -0.00004107, 181.97909950,  58517.81538729, 131.60246718),
-        (1.00000261,   0.00000562, 0.01671123, -0.00004392, 100.46457166,  35999.37244981, 102.93768193),
-        (1.52371034,   0.00001847, 0.09339410,  0.00007882,  -4.55343205,  19140.30268499, -23.94362959),
-        (5.20288700,  -0.00011607, 0.04838624, -0.00013253,  34.39644051,   3034.74612775,  14.72847983),
-        (9.53667594,  -0.00125060, 0.05386179, -0.00050991,  49.95424423,   1222.49362201,  92.59887831),
-        (19.18916464, -0.00196176, 0.04725744, -0.00004397, 313.23810451,    428.48202785, 170.95427630),
-        (30.06992276,  0.00026291, 0.00859048,  0.00005105, -55.12002969,    218.45945325,  44.96476227),
-        (39.48211675, -0.00031596, 0.24882730,  0.00005170, 238.92903833,    145.20780515, 224.06891629)]
+from numpy.polynomial.chebyshev import chebval  # chebfit
+from scipy import optimize
 
 
 def chebyshevval(coef, n):
@@ -22,16 +11,15 @@ def chebyshevval(coef, n):
 
 
 def polozaj_planeta(index, t, e_prev):  # kao sadasnjost se racuna godina 2000.
-    (a0, a1, e0, e1, l0, l1, omegabar0) = info[index]
+    (a0, a1, e0, e1, l0, l1, omegabar0) = podaci.info[index]
     # omegabar1 = 0.44441088
     t_ = t/36525
     a = a0 + a1*t_
     e = e0 + e1*t_
-    # print(t_,e)
     l_ = l0 + l1*t_
     e_ = 180/math.pi * e
     m = ((l_ - omegabar0) % 360)-180
-    e_ = scipy.optimize.newton(lambda _: _ - e_*math.sin(np.deg2rad(_)) - m, e_prev, maxiter=40, tol=1e-3)
+    e_ = optimize.newton(lambda unk: unk - e_*math.sin(np.deg2rad(unk)) - m, e_prev, maxiter=40, tol=1e-6)
     x = a * (math.cos(np.deg2rad(e_)) - e)
     y = a * math.sqrt(1-e**2) * math.sin(np.deg2rad(e_))
     eprev = e_
@@ -42,29 +30,33 @@ def simulacija(x, y, vx, vy, gm, n):  # simulira kretanje tela samo pocetnom brz
     _x = np.empty(n)
     _y = np.empty(n)
     _t = np.empty(n)
-    data = [[x, y], [vx, vy]]
+    data = (x, y, vx, vy)
     r = math.sqrt(x*x+y*y)
     v = math.sqrt(vx*vx+vy*vy)
     time = 0.0
-    limit = 0.001675
+    limit = 0.007
     eprev = 0
     for i in range(n):
         a = gm/(r ** 2)
-        # print(atemp)
+        # print(a)
         if a == 0:
             step = 3600*12
         else:
             step = math.ceil((v/a)*limit)
-        print(step)
-        eprev = polozaj_planeta(0, (time+step)/86400, eprev)[2]
+        eprev = polozaj_planeta(1, (time+step)/86400, eprev)[2]
         data = runge_kuta4(data, gm, step)
-        _x[i] = data[0][0]
-        _y[i] = data[0][1]
+        _x[i] = data[0]
+        _y[i] = data[1]
         _t[i] = time+step
         time = _t[i]
         r = math.sqrt(_x[i]*_x[i]+_y[i]*_y[i])
-        v = math.sqrt(data[1][0]*data[1][0]+data[1][1]*data[1][1])
-    print(time/(3600*24))
+        v = math.sqrt(data[2]*data[2]+data[3]*data[3])
+    return np.array((_x, _y))
+    # print(time/(3600*24))
+    # print(100 * ((-gm / math.sqrt(data[0] ** 2 + data[1] ** 2) + 0.5 * (data[2] ** 2 + data[3] ** 2)) / (
+    #        -gm / math.sqrt(x ** 2 + y ** 2)
+    #        + 0.5 * (vx * vx + vy * vy)) - 1), '%')
+    # print(n * step)
 
     # vrednosti = splev(T,f)
     # plt.figure();
@@ -73,10 +65,6 @@ def simulacija(x, y, vx, vy, gm, n):  # simulira kretanje tela samo pocetnom brz
     # plt.show()
     # print(Teta)
     # plt.legend()
-    print(100 * ((-gm / math.sqrt(data[0] ** 2 + data[1] ** 2) + 0.5 * (data[2] ** 2 + data[3] ** 2)) / (
-            -gm / math.sqrt(x ** 2 + y ** 2)
-            + 0.5 * (vx * vx + vy * vy)) - 1), '%')
-    print(n * step)
 
 
 def izracunaj(gm, r, v0, k, step):  # k je niz dva koef.- jedan za izvod polozaja drugi za izvod brzine
@@ -100,4 +88,4 @@ def runge_kuta4(data, gm, step):  # runge kuta 4. reda. mislim da i njegovo obja
     k = k1 + 2 * k2 + 2 * k3 + k4
     # print(k[0][0],k[0][0]);
     # print('rk: ',[r+(step/6)*k[1],v+(step/6)*k[0]]);
-    return [r + (step / 6) * k[1], v + (step / 6) * k[0]]
+    return np.concatenate((r + (step / 6) * k[1], v + (step / 6) * k[0]), axis=0)

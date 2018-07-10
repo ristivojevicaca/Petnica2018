@@ -1,15 +1,12 @@
 from numpy import random
+import podaci
 
 
-def fitness_f(time,dist):
-    min_dist = 6e6 # za sad nasumicne vrednosti
-    max_dist = 100e6 # za sad nasumicne vrednosti
-    Rmax = 20 #za sad nasumicne vrednosti
-    Rmin = 30 #za sad nasumicne vrednosti
-    g_max = dist/max_dist -1
-    g_min = 1 - dist/min_dist
-    P = Rmax * max(0,g_max) + Rmin * max(0,g_min)
-    return time + P
+def fitness_f(time, dist):
+    g_max = dist/podaci.max_dist - 1
+    g_min = 1 - dist/podaci.min_dist
+    p = podaci.rmax * max(0.0, g_max) + podaci.rmin * max(0.0, g_min)
+    return time + p
 
 
 # populacija je lista koja cuva podatke za sve jedinke u populaciji.

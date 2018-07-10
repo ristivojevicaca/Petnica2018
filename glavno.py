@@ -1,47 +1,14 @@
 import math
 from math import pi
 import numpy as np
-import matplotlib.pyplot as plt
 from numpy.polynomial.chebyshev import chebfit, chebval
-# import genetski_algoritam
+import matplotlib.pyplot as plt
 import prvi
+import simulacija_pogon
+# import time
+import podaci
+# import genetski_algoritam
 # import drugi
-
-
-# Ova funkcija prevodi niz dekadnih brojeva u njihov binarni zapis
-
-# def binary(num):
-#    # Struct can provide us with the float packed into bytes. The '!' ensures that
-#    # it's in network byte order (big-endian) and the 'f' says that it should be
-#    # packed as a float. Alternatively, for double-precision, you could use 'd'.
-#    packed = struct.pack('!f', num)
-#    #print 'Packed: %s' % repr(packed)
-#
-#    # For each character in the returned string, we'll turn it into its corresponding
-#    # integer code point
-#    #
-#    # [62, 163, 215, 10] = [ord(c) for c in '>\xa3\xd7\n']
-#    integers = [ord(c) for c in packed]
-#    #print 'Integers: %s' % integers
-#
-#    # For each integer, we'll convert it to its binary representation.
-#    binaries = [bin(i) for i in integers]
-#    #print 'Binaries: %s' % binaries
-#
-#    # Now strip off the '0b' from each of these
-#    stripped_binaries = [s.replace('0b', '') for s in binaries]
-#    #print 'Stripped: %s' % stripped_binaries
-#
-#    # Pad each byte's binary representation's with 0's to make sure it has all 8 bits:
-#    #
-#    # ['00111110', '10100011', '11010111', '00001010']
-#    padded = [s.rjust(8, '0') for s in stripped_binaries]
-#    #print 'Padded: %s' % padded
-#
-#    # At this point, we have each of the bytes for the network byte ordered float
-#    # in an array as binary strings. Now we just concatenate them to get the total
-#    # representation of the float:
-#    return ''.join(padded)
 
 
 def to_binary(niz_num):
@@ -97,18 +64,6 @@ def to_uint16(nizbin):  # ova funkcija prevodi niz 1 i 0 u nizniz dekadnih broje
 # Neptun
 # podaciPlaneta = np.array
 # konst.
-
-
-G = 1.32712440018e20
-info = [(0.38709927,   0.00000037, 0.20563593,  0.00001906, 252.25032350, 149472.67411175,  77.45779628),
-        (0.72333566,   0.00000390, 0.00677672, -0.00004107, 181.97909950,  58517.81538729, 131.60246718),
-        (1.00000261,   0.00000562, 0.01671123, -0.00004392, 100.46457166,  35999.37244981, 102.93768193),
-        (1.52371034,   0.00001847, 0.09339410,  0.00007882,  -4.55343205,  19140.30268499, -23.94362959),
-        (5.20288700,  -0.00011607, 0.04838624, -0.00013253,  34.39644051,   3034.74612775,  14.72847983),
-        (9.53667594,  -0.00125060, 0.05386179, -0.00050991,  49.95424423,   1222.49362201,  92.59887831),
-        (19.18916464, -0.00196176, 0.04725744, -0.00004397, 313.23810451,    428.48202785, 170.95427630),
-        (30.06992276,  0.00026291, 0.00859048,  0.00005105, -55.12002969,    218.45945325,  44.96476227),
-        (39.48211675, -0.00031596, 0.24882730,  0.00005170, 238.92903833,    145.20780515, 224.06891629)]
 
 # testiranje - rastojanje 150e9, brzina 29740
 # def polozaj_planete (podaciPlaneta,i):
@@ -168,7 +123,7 @@ def x_osa(a):
 def inicijalizacija(n, br_segm, chebdeg):
     uglovi_matrica = np.multiply(np.random.random_sample((n, br_segm)), 2 * pi)
     print(uglovi_matrica)
-    koeficijenti = np.array([chebfit(x_osa(br_segm), uglovi, chebdeg) for uglovi in uglovi_matrica])
+    koeficijenti = np.array([chebfit(x_osa(br_segm), _, chebdeg) for _ in uglovi_matrica])
     temp = np.array([chebval(x_osa(br_segm), cheb) for cheb in koeficijenti])
     print(np.divide(temp, uglovi_matrica))
     snaga = np.random.random_integers(0, 1, (n, br_segm))
@@ -189,8 +144,20 @@ def pakovanje(matrica, chebdeg):
 
 # def kodiranje(koeficijenti, snaga, n, br_segm):
 
+r0_ = np.array((150e9, 0))
+v0_ = np.array((0, 29780))
+# uglovi = np.zeros(1000)
+uglovi = np.ones(1000) * pi
 
-coef, uklj = inicijalizacija(5, 10, 8)
-matr = otpakivanje(coef, uklj)
-coef, uklj = pakovanje(matr, 8)
-print(np.array([chebval(x_osa(10), cheb) for cheb in coef]))
+# start = time.process_time()
+_r, _v = simulacija_pogon.simulacija(r0_, v0_, (4e2, 20), uglovi, 1000)
+# _b = simulacija_pogon.simulacija(r0_, v0_, (4e2, 20), np.zeros(1000), 1000)
+# _c = prvi.simulacija(150e9, 0, 0, 29780, podaci.grav_par[0], 1000)
+# print(time.process_time() - start)
+# plt.plot(_a[:, 0], _a[:, 1])
+# plt.plot(_b[:, 0], _b[:, 1])
+# plt.plot(_c[0], _c[1])
+# for _ in range(1000):
+#    print(_r[_], _v[_], simulacija_pogon.modulo(_r[_]) / podaci.au)
+plt.axis('equal')
+# plt.show()

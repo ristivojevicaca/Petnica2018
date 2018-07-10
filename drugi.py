@@ -20,7 +20,7 @@ def simulacija(x, y, vx, vy, gm, time_len, step, f, uglovi, kor_goriva, m):
             f = 0.0
             ang = []
         else:
-            ang = uglovi(k)
+            ang = uglovi[k]
         rez = runge_kuta4(x, y, vx, vy, gm, step, f, m, ang, kor_goriva)
         m = m - kor_goriva * step
         # print(rez[0][0])
@@ -38,10 +38,10 @@ def simulacija(x, y, vx, vy, gm, time_len, step, f, uglovi, kor_goriva, m):
     # plt.legend()
 
 
-def izracunaj(gm, r, v0, k, step, f, ang, gor):
-    r = r + k[1] * step
-    R = np.sqrt(r[0] * r[0] + r[1] * r[1])
-    a = -1 * (r / R) * gm / (R * R) + (f / (gor[0] - step * gor[1])) * u_niz([math.cos(ang), math.sin(ang)])
+def izracunaj(gm, r_, v0, k, step, f, ang, gor):
+    r_ = r_ + k[1] * step
+    r = np.sqrt(r_[0] * r_[0] + r_[1] * r_[1])
+    a = -1 * (r_ / r) * gm / (r * r) + (f / (gor[0] - step * gor[1])) * u_niz([math.cos(ang), math.sin(ang)])
     v = v0 + k[0] * step
     # print(r,R,a,v,'End\n')
     # print('a ', a,'shape', np.shape (a),'b ',v,'shape ', np.shape(v));
