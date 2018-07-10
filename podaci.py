@@ -5,7 +5,7 @@ import numpy as np
 fuel_type = "solar"
 r0_ = np.array((150e9, 0))
 v0_ = np.array((0, 29780))
-n = 800
+n = 20
 
 # astronomska jedinica -> metri
 au = 149597870700
@@ -14,7 +14,14 @@ au = 149597870700
 grav_par = [1.327124400189e20, 2.20329e13, 3.248599e14, 3.9860044188e14, 4.90486959e12, 4.2828372e13, 6.26325e10,
             1.266865349e17, 3.79311879e16, 5.7939399e15, 6.8365299e15, 8.719e11]
 
-# Podaci potebni za odredjivanje putanja planeta
+# podaci potrebni za racunanje pozicije planete po formulama. imas formule u jednom pdf - u na drajvu.
+# redosled podataka je:
+# masa - u jedinicama
+# a - velika poluosa i njena promena po veku
+# e - ekscentricitet i promena po veku
+# L - srednja longituda i promena po veku
+# malo teta - longtituda perihela i promena po veku
+# Teta - longtitude of ascending node i promena po veku
 info = [(),
         (0.38709927,   0.00000037, 0.20563593,  0.00001906, 252.25032350, 149472.67411175,  77.45779628),
         (0.72333566,   0.00000390, 0.00677672, -0.00004107, 181.97909950,  58517.81538729, 131.60246718),

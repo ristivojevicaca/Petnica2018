@@ -38,14 +38,17 @@ def simulacija(r_, v_, brod, uglovi, y_max):  # simulira kretanje tela samo poce
     motor_uklj = True
     n = len(uglovi)
     t_max = y_max * 365.25 * 24 * 3600
-    _r = np.zeros((int(t_max / 6 / 3600), 2))
-    _v = np.zeros((int(t_max / 6 / 3600), 2))
-    _time = np.zeros(int(t_max / 6 / 3600))
-    _step = np.zeros(int(t_max / 6 / 3600))
+    # print(t_max)
+    len_nizova = int(t_max / (6*3600))
+    _r = np.zeros((len_nizova, 2))
+    _v = np.zeros((len_nizova, 2))
+    _time = np.zeros(len_nizova)
+    _step = np.zeros(len_nizova)
     r = modulo(r_)
     v = modulo(v_)
     time = 0.0
     limit = 0.007
+    i = 0
     # prev_sol = 0
     while time < t_max:
         # start = tm.process_time()
@@ -66,16 +69,23 @@ def simulacija(r_, v_, brod, uglovi, y_max):  # simulira kretanje tela samo poce
             step = math.ceil(fuel_mass / motor.flow_rate(r, time))
         
         if math.floor((time + step) / t_max * n) != ind:
-            step = math.ceil(time / t_max * n) - time / t_max * n
+            step = math.ceil((ind+1) * t_max/n - time)
         
-        (r_, v_, brod) = runge_kuta4(r_, v_, time, brod, uglovi[i], step, motor_uklj)
+        (r_, v_, brod) = runge_kuta4(r_, v_, time, brod, uglovi[ind], step, motor_uklj)
 
         r = modulo(r_)
         v = modulo(v_)
+        if i == len_nizova:
+            _r = np.append(_r, np.empty(100))
+            _v = np.append(_v, np.empty(100))
+            _time = np.append(_time, np.empty(100))
+            _step = np.append(_step, np.empty(100))
         _r[i] = r_
         _v[i] = v_
         _time[i] = time+step
         _step[i] = step
         time = _time[i]
+        # print(time, i)
+        i = i + 1
         # print(tm.process_time() - start)
-    return _r, _v, _step
+    return _r[:i-1], _v[:i-1], _step[:i-1]
