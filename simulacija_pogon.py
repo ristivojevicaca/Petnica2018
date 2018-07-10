@@ -33,26 +33,29 @@ def runge_kuta4(r_, v_, t, brod, ugao, step, motor_uklj):
     return np.array((r_, v_, brod)) + k/6
 
 
-def simulacija(r_, v_, brod, uglovi, n):  # simulira kretanje tela samo pocetnom brzinom u gravitacionom polju sunca
+def simulacija(r_, v_, brod, uglovi, y_max):  # simulira kretanje tela samo pocetnom brzinom u gravitacionom polju sunca
     # m = m_ukupna
     motor_uklj = True
-    _r = np.zeros((n, 2))
-    _v = np.zeros((n, 2))
-    _time = np.zeros(n)
-    _step = np.zeros(n)
+    n = len(uglovi)
+    t_max = y_max * 365.25 * 24 * 3600
+    _r = np.zeros((int(t_max / 6 / 3600), 2))
+    _v = np.zeros((int(t_max / 6 / 3600), 2))
+    _time = np.zeros(int(t_max / 6 / 3600))
+    _step = np.zeros(int(t_max / 6 / 3600))
     r = modulo(r_)
     v = modulo(v_)
     time = 0.0
     limit = 0.007
     # prev_sol = 0
-    for i in range(n):
+    while time < t_max:
         # start = tm.process_time()
+        ind = math.floor(time / t_max * n)
         dry_mass, fuel_mass = brod
         if fuel_mass <= 0:
             motor_uklj = False
         a_ = -podaci.grav_par[0] * r_ / (r ** 3)
         if motor_uklj:
-            a_ = a_ + motor.thrust(r, time) / (dry_mass + fuel_mass) * jed_vec(uglovi[i])
+            a_ = a_ + motor.thrust(r, time) / (dry_mass + fuel_mass) * jed_vec(uglovi[ind])
         a = modulo(a_)
         if a == 0:
             step = 3600*12
@@ -61,6 +64,10 @@ def simulacija(r_, v_, brod, uglovi, n):  # simulira kretanje tela samo pocetnom
 
         if motor.flow_rate(r, time) * step > fuel_mass and motor_uklj:
             step = math.ceil(fuel_mass / motor.flow_rate(r, time))
+        
+        if math.floor((time + step) / t_max * n) != ind:
+            step = math.ceil(time / t_max * n) - time / t_max * n
+        
         (r_, v_, brod) = runge_kuta4(r_, v_, time, brod, uglovi[i], step, motor_uklj)
 
         r = modulo(r_)
