@@ -1,7 +1,8 @@
 import numpy as np
 import math
 import podaci
-import solar
+import motor
+# import time as tm
 
 
 def modulo(vector):
@@ -12,30 +13,29 @@ def jed_vec(ugao):
     return np.array((math.cos(ugao), math.sin(ugao)))
 
 
-def izracunaj(r_, v_, t, brod, ugao, motor, k=np.zeros((3, 2)), step=0.0):
-    dry_mass, fuel_mass = brod
-    mass = np.array((dry_mass, fuel_mass))
-    r_, v_, mass = np.array((r_, v_, mass)) + k
-    a_ = - podaci.grav_par[0] * r_ / (modulo(r_) ** 3)
+def izracunaj(r_, v_, t, brod, ugao, motor_uklj, k=np.zeros((3, 2)), step=0.0):
+    r_, v_, brod = np.array((r_, v_, brod)) + k
+    r = modulo(r_)
+    a_ = - podaci.grav_par[0] * r_ / (r ** 3)
     delta_mass = 0
-    if motor:
-        a_ = a_ + solar.thrust(modulo(r_), t + step) / np.sum(mass) * jed_vec(ugao)
-        delta_mass = -solar.flow_rate(modulo(r_), t + step)
+    if motor_uklj:
+        a_ = a_ + motor.thrust(r, t + step) / np.sum(brod) * jed_vec(ugao)
+        delta_mass = -motor.flow_rate(r, t + step)
     return np.array((v_, a_, np.array((0, delta_mass))))
 
 
-def runge_kuta4(r_, v_, t, brod, ugao, step, motor):
-    k1 = step * izracunaj(r_, v_, t, brod, ugao, motor)
-    k2 = step * izracunaj(r_, v_, t, brod, ugao, motor, k1/2, step/2)
-    k3 = step * izracunaj(r_, v_, t, brod, ugao, motor, k2/2, step/2)
-    k4 = step * izracunaj(r_, v_, t, brod, ugao, motor, k3, step)
+def runge_kuta4(r_, v_, t, brod, ugao, step, motor_uklj):
+    k1 = step * izracunaj(r_, v_, t, brod, ugao, motor_uklj)
+    k2 = step * izracunaj(r_, v_, t, brod, ugao, motor_uklj, k1/2, step/2)
+    k3 = step * izracunaj(r_, v_, t, brod, ugao, motor_uklj, k2/2, step/2)
+    k4 = step * izracunaj(r_, v_, t, brod, ugao, motor_uklj, k3, step)
     k = k1 + 2 * k2 + 2 * k3 + k4
     return np.array((r_, v_, brod)) + k/6
 
 
 def simulacija(r_, v_, brod, uglovi, n):  # simulira kretanje tela samo pocetnom brzinom u gravitacionom polju sunca
     # m = m_ukupna
-    motor = True
+    motor_uklj = True
     _r = np.zeros((n, 2))
     _v = np.zeros((n, 2))
     _time = np.zeros(n)
@@ -46,29 +46,29 @@ def simulacija(r_, v_, brod, uglovi, n):  # simulira kretanje tela samo pocetnom
     limit = 0.007
     # prev_sol = 0
     for i in range(n):
+        # start = tm.process_time()
         dry_mass, fuel_mass = brod
         if fuel_mass <= 0:
-            motor = False
+            motor_uklj = False
         a_ = -podaci.grav_par[0] * r_ / (r ** 3)
-        if motor:
-            a_ = a_ + solar.thrust(r, time) / (dry_mass + fuel_mass) * jed_vec(uglovi[i])
+        if motor_uklj:
+            a_ = a_ + motor.thrust(r, time) / (dry_mass + fuel_mass) * jed_vec(uglovi[i])
         a = modulo(a_)
         if a == 0:
             step = 3600*12
         else:
             step = math.ceil((v/a)*limit)
 
-        if solar.flow_rate(r, time) * step > fuel_mass and motor:
-            step = math.ceil(fuel_mass / solar.flow_rate(r, time))
-
-        (r_, v_, brod) = runge_kuta4(r_, v_, time, brod, uglovi[i], step, motor)
+        if motor.flow_rate(r, time) * step > fuel_mass and motor_uklj:
+            step = math.ceil(fuel_mass / motor.flow_rate(r, time))
+        (r_, v_, brod) = runge_kuta4(r_, v_, time, brod, uglovi[i], step, motor_uklj)
 
         r = modulo(r_)
         v = modulo(v_)
         _r[i] = r_
         _v[i] = v_
         _time[i] = time+step
-        print(step, i)
         _step[i] = step
         time = _time[i]
+        # print(tm.process_time() - start)
     return _r, _v, _step

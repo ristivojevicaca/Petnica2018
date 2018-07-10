@@ -1,12 +1,13 @@
-import math
-from math import pi
-import numpy as np
 from numpy.polynomial.chebyshev import chebfit, chebval
 import matplotlib.pyplot as plt
-import prvi
+from math import pi
+import numpy as np
+import math
+import time
+from podaci import r0_, v0_, n
 import simulacija_pogon
-# import time
-import podaci
+import prvi
+# import podaci
 # import genetski_algoritam
 # import drugi
 
@@ -144,16 +145,15 @@ def pakovanje(matrica, chebdeg):
 
 # def kodiranje(koeficijenti, snaga, n, br_segm):
 
-r0_ = np.array((150e9, 0))
-v0_ = np.array((0, 29780))
-# uglovi = np.zeros(1000)
-uglovi = np.ones(2000) * pi
 
-# start = time.process_time()
-_r, _v, _step = simulacija_pogon.simulacija(r0_, v0_, (4e2, 0), uglovi, 2000)
+# uglovi = np.zeros(1000)
+uglovi = np.ones(n) * pi
+
+start = time.process_time()
+_r, _v, _step = simulacija_pogon.simulacija(r0_, v0_, (4e2, 0), uglovi, n)
 # _b = simulacija_pogon.simulacija(r0_, v0_, (4e2, 20), np.zeros(1000), 1000)
 # _c = prvi.simulacija(150e9, 0, 0, 29780, podaci.grav_par[0], 1000)
-# print(time.process_time() - start)
+print(time.process_time() - start)
 plt.plot(_r[:, 0], _r[:, 1])
 # plt.plot(_b[:, 0], _b[:, 1])
 # plt.plot(_c[0], _c[1])

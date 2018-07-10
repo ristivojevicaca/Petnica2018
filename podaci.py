@@ -1,13 +1,20 @@
 import numpy as np
 
-# astornomska jedinica -> metri
+# promenljive
+
+fuel_type = "solar"
+r0_ = np.array((150e9, 0))
+v0_ = np.array((0, 29780))
+n = 800
+
+# astronomska jedinica -> metri
 au = 149597870700
 
 # gravitacioni parametri
 grav_par = [1.327124400189e20, 2.20329e13, 3.248599e14, 3.9860044188e14, 4.90486959e12, 4.2828372e13, 6.26325e10,
             1.266865349e17, 3.79311879e16, 5.7939399e15, 6.8365299e15, 8.719e11]
 
-#
+# Podaci potebni za odredjivanje putanja planeta
 info = [(),
         (0.38709927,   0.00000037, 0.20563593,  0.00001906, 252.25032350, 149472.67411175,  77.45779628),
         (0.72333566,   0.00000390, 0.00677672, -0.00004107, 181.97909950,  58517.81538729, 131.60246718),
@@ -20,8 +27,9 @@ info = [(),
         (39.48211675, -0.00031596, 0.24882730,  0.00005170, 238.92903833,    145.20780515, 224.06891629)]
 
 # PODACI O SOLARNOM POGONU
+
 alphaP = 1.0*au
-P0 = 1000
+P0_solar = 1000
 r_max = 5 * au
 r_tilt = 0.7 * au
 cm = np.array([475.56e-9, 0.90209e-9, .0, .0, .0])
@@ -32,6 +40,14 @@ beta = np.array([1.0, 0.0, 0.0, 0.0])
 psc = 150  # primer vrednosti
 Pmin = 649
 Pmax = 2600
+
+# # # # # # # # # # # # #
+
+# RTG
+
+eta = 0.068
+halflife = 2765707200
+P0_rtg = 4400
 
 # # # # # # # # # # # # #
 

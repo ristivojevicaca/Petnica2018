@@ -25,7 +25,12 @@ def epsilon(t):
 
 
 def p_gen(r, t):
-    return podaci.P0 * epsilon(t) * prel(r)
+    if podaci.fuel_type == "solar":
+        return podaci.P0_solar * epsilon(t) * prel(r)
+    elif podaci.fuel_type == "rtg":
+        return podaci.P0_rtg*podaci.eta*(0.5**(podaci.halflife/t))
+    else:
+        raise ValueError
 
 
 def p_avb(r, t):
